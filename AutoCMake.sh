@@ -80,7 +80,7 @@ CreateCMakeLists() {
     else
         echo "Хотите создать скелет вашего проекта?(y/n)"
         read CreateSkelet
-        if [[ "$CreateSkelet" == "y" ]]; then
+        if [[ "$CreateSkelet" == "y" || "$CreateSkelet" == "" ]]; then
             mkdir $ProjectDir/src $ProjectDir/header $ProjectDir/build
             touch $ProjectDir/$NameMain
             echo -e "Были созданы каталоги:\n\tsrc(для реализаций)\n\theader(для заголовочных файлов)\n\tbuild(техническая)"
@@ -102,10 +102,42 @@ CreateCMakeLists() {
     название проекта -- $ProjectName"
 }
 
+#=======================================
+
+ChangeName() {
+    sed -i "s/project(.*)/project($1)/" $ProjectDir/CMakeLists.txt
+}
+
+ChangeVersion() {
+    sed -i "s/cmake_minimum_required(.*)/cmake_minimum_required(VERSION $1)/" $ProjectDir/CMakeLists.txt
+}
+
+AddIsh () {
+    sed -i "s/^set(SRC_FILES"
+}
+
 # Coming soon
 EditCMakeLists() {
-    echo "" >/dev/null
+    operation=0
+    echo -e "0 - изменить имя\n\
+1 - изменить версию\n\
+2 - добавить исходник\n"
+
+    read -t 10 operation
+    if [[ operation == 0 ]]; then
+        read -p "Введите новое имя проекта: " newName
+        ChangeName $newName
+
+    elif [[ operation == 1 ]]; then
+        read -p "Введите минимальную версию cmake: " newVersion
+        ChangeVersion $newVersion
+    elif [[ operation == 2 ]]; then
+        read -p "Введите путь до исходника вида \"src/tandem.cpp\": " path
+        AddIsh $path
+    fi
 }
+
+# НАЧАЛО СКРИПТА
 
 CurrentDir=$(pwd)
 ProjectDir=""
@@ -113,7 +145,7 @@ ProjectDir=""
 # получение рабочей директории
 echo -e "$CurrentDir\nтекущая директория проекта?(y/n)"
 read RightDir
-if [[ "$RightDir" == "y" ]]; then
+if [[ "$RightDir" == "y" || "$RightDir" == "" ]]; then
     ProjectDir=$CurrentDir
 else
     setDir
@@ -121,14 +153,16 @@ else
 fi
 
 # поиск CMakeLists.txt
-status=$(find $ProjectDir -name "CMakeLists.txt")
+if [ $# == 0 ]; then
+    status=$(find $ProjectDir -name "CMakeLists.txt")
 
-if [[ "$status" == "" ]]; then # Если не найден
-    CreateCMakeLists
-else # Если найден
-    echo "Желаете изменить CMakeLists?(y/n)"
-    read GetChange
-    if [[ "$GetChange" == "y" ]]; then
-        EditCMakeLists
+    if [[ "$status" == "" ]]; then # Если не найден
+        CreateCMakeLists
+    else # Если найден
+        echo "Желаете изменить CMakeLists?(y/n)"
+        read GetChange
+        if [[ "$GetChange" == "y" || "$GetChange" == "" ]]; then
+            EditCMakeLists
+        fi
     fi
 fi
