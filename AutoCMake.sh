@@ -116,7 +116,6 @@ AddIsh () {
     sed -i "s/^set(SRC_FILES"
 }
 
-# Coming soon
 EditCMakeLists() {
     operation=0
     echo -e "0 - изменить имя\n\
@@ -124,14 +123,15 @@ EditCMakeLists() {
 2 - добавить исходник\n"
 
     read -t 10 operation
-    if [[ operation == 0 ]]; then
+    if (( operation == 0 )); then
         read -p "Введите новое имя проекта: " newName
         ChangeName $newName
 
-    elif [[ operation == 1 ]]; then
+    elif (( operation == 1 )); then
         read -p "Введите минимальную версию cmake: " newVersion
         ChangeVersion $newVersion
-    elif [[ operation == 2 ]]; then
+
+    elif (( operation == 2 )); then
         read -p "Введите путь до исходника вида \"src/tandem.cpp\": " path
         AddIsh $path
     fi
