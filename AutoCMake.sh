@@ -1,14 +1,17 @@
 #!/bin/bash
 
+# установка рабочей диресктоии
 setDir() {
     echo "Введите путь до вашего проекта(либо с '/' либо с '~')"
     read -e TempDir
     TempDir=$(echo "$TempDir" | sed "s|~|$HOME|")
     echo "Верно?(y/n)"
+    RightDir="y"
     read RightDir
     RightDirFunc $RightDir $TempDir
 }
 
+# прверка на верность директории
 RightDirFunc() {
     if [[ "$1" == "n" ]]; then
         setDir n
@@ -17,8 +20,8 @@ RightDirFunc() {
     fi
 }
 
+# Создание CMakeLists
 CreateCMakeLists() {
-    # Создание самого файла
     touch $ProjectDir/CMakeLists.txt
     echo "Был создан файл CMakeLists.txt"
 
@@ -28,7 +31,7 @@ CreateCMakeLists() {
         echo "Введите минимальную версию cmake(по умолчанию 3.5.0)"
         read -t 15 Version
         if [[ "$Version" == "" ]]; then
-            Version="3.5.0"
+            Version="3.10.0"
         fi
         echo -e "Выбрана версия: $Version\nУстраивает?(y/n)"
         read -t 4 correct
@@ -52,7 +55,7 @@ CreateCMakeLists() {
 
     echo "Введите название главного(main) файла"
     read NameMain
-    echo "    $NameMain" >>$ProjectDir/CMakeLists.txt
+    echo -e "\t$NameMain" >>$ProjectDir/CMakeLists.txt
 
     echo "У вас уже имеются исходные файлы?(y/n)"
     read HaveIshodniks
@@ -97,23 +100,27 @@ CreateCMakeLists() {
     cd $CurrentDir
 
     echo -e "\nРезультаты работы скрипта:
-был создан CMakeLists.txt с такими параметрами:
+    был создан CMakeLists.txt с такими параметрами:
     минимальная версия cmake -- $Version
     название проекта -- $ProjectName"
 }
 
 #=======================================
 
+# Изменение имени проекта
 ChangeName() {
     sed -i "s/project(.*)/project($1)/" $ProjectDir/CMakeLists.txt
 }
 
+# Изменение версии cmake
 ChangeVersion() {
     sed -i "s/cmake_minimum_required(.*)/cmake_minimum_required(VERSION $1)/" $ProjectDir/CMakeLists.txt
 }
 
+# Добавление файла исходника
 AddIsh () {
-    sed -i "s/^set(SRC_FILES"
+    tmp=$(cat $ProjectDir/CMakeLists.txt | grep "set(SRC_FILES")
+    sed -i "s/$tmp/$tmp\n    src\/"$1".cpp/" $ProjectDir/CMakeLists.txt
 }
 
 EditCMakeLists() {
@@ -123,22 +130,21 @@ EditCMakeLists() {
 2 - добавить исходник\n"
 
     read -t 10 operation
-    if (( operation == 0 )); then
+    if (( $operation == 0 )); then
         read -p "Введите новое имя проекта: " newName
         ChangeName $newName
 
-    elif (( operation == 1 )); then
+    elif (( $operation == 1 )); then
         read -p "Введите минимальную версию cmake: " newVersion
         ChangeVersion $newVersion
 
-    elif (( operation == 2 )); then
-        read -p "Введите путь до исходника вида \"src/tandem.cpp\": " path
-        AddIsh $path
+    elif (( $operation == 2 )); then
+        read -p "Введите имя файла: " FileName
+        AddIsh $FileName
     fi
 }
 
 # НАЧАЛО СКРИПТА
-
 CurrentDir=$(pwd)
 ProjectDir=""
 
@@ -164,5 +170,14 @@ if [ $# == 0 ]; then
         if [[ "$GetChange" == "y" || "$GetChange" == "" ]]; then
             EditCMakeLists
         fi
+    fi
+
+# создание файлов для исходников
+elif [ $1 == "--add" ]; then
+    touch "$ProjectDir/src/"$2".cpp"
+    touch "$ProjectDir/header/"$2".hpp"
+    tmp=$(cat $ProjectDir/CMakeLists.txt | grep "$2")
+    if [[ $tmp == "" ]]; then
+        AddIsh $2
     fi
 fi
