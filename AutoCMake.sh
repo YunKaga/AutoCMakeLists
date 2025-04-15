@@ -27,7 +27,7 @@ CreateCMakeLists() {
 
     # Указание минимальной версии cmake
     correct="n"
-    while [ $correct != "y" ]; do
+    while [[ $correct != "y" ]]; do
         echo "Введите минимальную версию cmake(по умолчанию 3.10.0)"
         read -t 15 Version
         if [[ "$Version" == "" ]]; then
