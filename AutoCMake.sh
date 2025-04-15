@@ -14,7 +14,7 @@ setDir() {
 # прверка на верность директории
 RightDirFunc() {
     if [[ "$1" == "n" ]]; then
-        setDir n
+        setDir
     else
         export TempDir
     fi
@@ -28,7 +28,7 @@ CreateCMakeLists() {
     # Указание минимальной версии cmake
     correct="n"
     while [ $correct != "y" ]; do
-        echo "Введите минимальную версию cmake(по умолчанию 3.5.0)"
+        echo "Введите минимальную версию cmake(по умолчанию 3.10.0)"
         read -t 15 Version
         if [[ "$Version" == "" ]]; then
             Version="3.10.0"
