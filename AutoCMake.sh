@@ -92,6 +92,9 @@ CreateCMakeLists() {
     fi
 
     echo -e ")\n" >>$ProjectDir/CMakeLists.txt
+
+    echo -e "include_directories(header)\n" >> $ProjectDir/CMakeLists.txt
+
     echo 'add_executable(${PROJECT_NAME} ${SRC_FILES}) # название итогого приложения и из чего его собирать' >>$ProjectDir/CMakeLists.txt
 
     cd $ProjectDir/build
