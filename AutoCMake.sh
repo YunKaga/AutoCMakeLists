@@ -48,6 +48,10 @@ CreateCMakeLists() {
     fi
     echo -e "project($ProjectName) \
  # название проекта\n" >>$ProjectDir/CMakeLists.txt
+    
+    echo -e "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)\n" >> $ProjectDir/CMakeLists.txt
 
     # Указание исходных файлов для проекта
     echo "set(SRC_FILES\
