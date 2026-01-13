@@ -23,15 +23,18 @@ RightDirFunc() {
 # Создание CMakeLists
 CreateCMakeLists() {
     touch $ProjectDir/CMakeLists.txt
+    echo -e "#pragma once
+
+#cmakedefine PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@" >> $ProjectDir/version.h.in
     echo "Был создан файл CMakeLists.txt"
 
     # Указание минимальной версии cmake
     correct="n"
     while [[ $correct != "y" ]]; do
-        echo "Введите минимальную версию cmake(по умолчанию 3.10.0)"
+        echo "Введите минимальную версию cmake(по умолчанию 3.15)"
         read -t 15 Version
         if [[ "$Version" == "" ]]; then
-            Version="3.10.0"
+            Version="3.15"
         fi
         echo -e "Выбрана версия: $Version\nУстраивает?(y/n)"
         read -t 4 correct
@@ -39,6 +42,9 @@ CreateCMakeLists() {
 
     echo "cmake_minimum_required(VERSION $Version)\
  # минимальная версия cmake" >>$ProjectDir/CMakeLists.txt
+
+    echo -e "\nset(PATCH_VERSION \"1\" CACHE INTERNAL \"Patch version\")
+set(PROJECT_VESRION \${PATCH_VERSION})\n" >> $ProjectDir/CMakeLists.txt
     
     # Указание имени проекта
     echo "Введите название вашего проекта(по умолчанию Another_Project)"
@@ -46,10 +52,10 @@ CreateCMakeLists() {
     if [[ "$ProjectName" == "" ]]; then
         ProjectName="Another_Project"
     fi
-    echo -e "project($ProjectName) \
+    echo -e "project($ProjectName VERSION \${PROJECT_VESRION}) \
  # название проекта\n" >>$ProjectDir/CMakeLists.txt
     
-    echo -e "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    echo -e "configure_file(version.h.in version.h)\n\nset(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)\n" >> $ProjectDir/CMakeLists.txt
 
@@ -101,10 +107,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)\n" >> $ProjectDir/CMakeLists.txt
 
     echo 'add_executable(${PROJECT_NAME} ${SRC_FILES}) # название итогого приложения и из чего его собирать' >>$ProjectDir/CMakeLists.txt
 
-    cd $ProjectDir/build
-    cmake ..
-    make 2>/dev/null
-    cd $CurrentDir
+    echo -e "install(TARGETS \${PROJECT_NAME} RUNTIME DESTINATION bin)\n
+set(CPACK_GENERATOR DEB)\n
+set(CPACK_PACKAGE_VERSION_MAJOR \"\${PROJECT_VERSION_MAJOR}\")
+set(CPACK_PACKAGE_VERSION_MINOR \"\${PROJECT_VERSION_MINOR}\")
+set(CPACK_PACKAGE_VERSION_PATCH \"\${PROJECT_VERSION_PATCH}\")\n
+set(CPACK_PACKAGE_CONTACT example@example.com)\n
+include(CPack)" >> $ProjectDir/CMakeLists.txt
 
     echo -e "\nРезультаты работы скрипта:
     был создан CMakeLists.txt с такими параметрами:
@@ -181,8 +190,12 @@ if [ $# == 0 ]; then
 
 # создание файлов для исходников
 elif [ $1 == "--add" ]; then
-    touch "$ProjectDir/src/"$2".cpp"
-    touch "$ProjectDir/header/"$2".hpp"
+    echo "#include \"$2.hpp\"" > $ProjectDir/src/$2.cpp
+    tmp1=$(echo "$2" | tr '[:lower:]' '[:upper:]' | sed "s/\./\_/")
+    echo "#ifndef "$tmp1"_HPP
+#define "$tmp1"_HPP
+
+#endif" > $ProjectDir/header/$2.hpp
     tmp=$(cat $ProjectDir/CMakeLists.txt | grep "$2")
     if [[ $tmp == "" ]]; then
         AddIsh $2
